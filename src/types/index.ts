@@ -1,3 +1,6 @@
+import { Message } from "discord.js-selfbot-v13";
+import { StreamingService } from "../services/streaming.js";
+
 export interface VideoFormat {
 	hasVideo: boolean;
 	hasAudio: boolean;
@@ -266,11 +269,11 @@ export interface YTFlags {
 }
 
 export interface CommandContext {
-	message: any;
+	message: Message;
 	args: string[];
 	videos: Video[];
 	streamStatus: StreamStatus;
-	streamingService: any;
+	streamingService: StreamingService;
 }
 
 export interface StreamStatus {

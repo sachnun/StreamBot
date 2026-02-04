@@ -1,5 +1,5 @@
 import { BaseCommand } from "./base.js";
-import { CommandContext, Video } from "../types/index.js";
+import { CommandContext } from "../types/index.js";
 import fs from 'fs';
 import path from 'path';
 import config from "../config.js";

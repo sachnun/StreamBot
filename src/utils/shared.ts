@@ -132,11 +132,12 @@ export const ErrorUtils = {
   /**
    * Handle and log errors consistently
    */
-  async handleError(error: any, context: string, message?: Message): Promise<void> {
+  async handleError(error: unknown, context: string, message?: Message): Promise<void> {
     logger.error(`Error in ${context}:`, error);
 
     if (message) {
-      await DiscordUtils.sendError(message, `An error occurred: ${error.message || 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      await DiscordUtils.sendError(message, `An error occurred: ${errorMessage}`);
     }
   },
 

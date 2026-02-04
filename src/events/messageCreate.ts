@@ -1,13 +1,14 @@
 import { Message } from "discord.js-selfbot-v13";
 import { CommandManager } from "../commands/manager.js";
 import { CommandContext, Video, StreamStatus } from "../types/index.js";
+import { StreamingService } from "../services/streaming.js";
 import config from "../config.js";
 
 export async function handleMessageCreate(
 	message: Message,
 	videos: Video[],
 	streamStatus: StreamStatus,
-	streamingService: any,
+	streamingService: StreamingService,
 	commandManager: CommandManager
 ): Promise<void> {
 	// Ignore bots, self, non-command channels, and non-commands

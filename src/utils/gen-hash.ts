@@ -5,9 +5,9 @@ const password = process.argv[2];
 const hashType = process.argv[3] || 'argon2';
 
 if (!password) {
-	console.error('Usage: bun/node run gen-hash <password> [type]');
-    console.error('\tExample: bun/node run gen-hash mySecurePassword123 argon2');
-	console.error('\tExample: bun/node run gen-hash mySecurePassword123 bcrypt');
+	console.error('Usage: npm run gen-hash <password> [type]');
+    console.error('\tExample: npm run gen-hash mySecurePassword123 argon2');
+	console.error('\tExample: npm run gen-hash mySecurePassword123 bcrypt');
 	console.error('\nSupported types: argon2 (default), bcrypt');
 	process.exit(1);
 }

@@ -1,5 +1,5 @@
 // Helper function to stringify objects for display in templates
-export function stringify(obj: any): string {
+export function stringify(obj: unknown): string {
 	// if string, return it
 	if (typeof obj === "string") {
 		return obj;
@@ -9,14 +9,13 @@ export function stringify(obj: any): string {
 		return `<ul>${obj.map(item => {
 			return `<li>${stringify(item)}</li>`;
 		}).join("")}</ul>`;
+	} else if (typeof obj === "object" && obj !== null) {
+		const record = obj as Record<string, unknown>;
+		return `<ul>${Object.keys(record).map(key => {
+			return `<li>${key}: ${stringify(record[key])}</li>`;
+		}).join("")}</ul>`;
 	} else {
-		if (typeof obj === "object") {
-			return `<ul>${Object.keys(obj).map(key => {
-				return `<li>${key}: ${stringify(obj[key])}</li>`;
-			}).join("")}</ul>`;
-		} else {
-			return String(obj);
-		}
+		return String(obj);
 	}
 }
 

@@ -1,6 +1,5 @@
 import { BaseCommand } from "./base.js";
-import { CommandContext } from "../types/index.js";
-import { MediaService } from "../services/media.js";
+import { CommandContext, Video } from "../types/index.js";
 import { ErrorUtils, GeneralUtils } from '../utils/shared.js';
 
 export default class PlayCommand extends BaseCommand {
@@ -8,11 +7,8 @@ export default class PlayCommand extends BaseCommand {
 	description = "Play local video, URL, or search YouTube videos";
 	usage = "play <video_name|url|search_query>";
 
-	private mediaService: MediaService;
-
 	constructor() {
 		super();
-		this.mediaService = new MediaService();
 	}
 
 	async execute(context: CommandContext): Promise<void> {
@@ -40,7 +36,7 @@ export default class PlayCommand extends BaseCommand {
 	}
 
 
-	private async handleLocalVideo(context: CommandContext, video: any): Promise<void> {
+	private async handleLocalVideo(context: CommandContext, video: Video): Promise<void> {
 		// Add to queue instead of playing immediately
 		const success = await context.streamingService.addToQueue(context.message, video.path, video.name);
 

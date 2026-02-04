@@ -14,32 +14,22 @@ export class CommandManager {
 	}
 
 	private async loadCommands(): Promise<void> {
-		// Prefer src for Bun (TypeScript native), dist for Node.js (compiled JS)
-		const isBun = typeof Bun !== 'undefined';
-		const commandsPath = path.join(process.cwd(), isBun ? 'src' : 'dist', 'commands');
+		const commandsPath = path.join(process.cwd(), 'dist', 'commands');
 
-		if (!commandsPath) {
-			logger.error('Could not find commands directory in either dist/ or src/');
-			return;
-		}
-		
 		try {
 			const commandFiles = fs.readdirSync(commandsPath)
-				.filter(file => (file.endsWith('.ts') || file.endsWith('.js')) && !file.endsWith('.d.ts') && !file.startsWith('base.') && !file.startsWith('manager.'));
+				.filter(file => file.endsWith('.js') && !file.endsWith('.d.ts') && !file.startsWith('base.') && !file.startsWith('manager.'));
 
 			for (const file of commandFiles) {
 				try {
-					// Use appropriate extension based on directory
-					const isDist = commandsPath.includes('dist');
-					const fileName = isDist ? file.replace('.ts', '.js') : file;
-					const filePath = path.join(commandsPath, fileName);
+					const filePath = path.join(commandsPath, file);
 					const commandModule = await import(filePath);
 
 					// Look for default export or named export
 					let CommandClass = commandModule.default || commandModule[Object.keys(commandModule)[0]];
 
 					if (CommandClass && this.isCommand(CommandClass)) {
-						const command = new CommandClass(this) as Command;
+						const command = new CommandClass() as Command;
 
 						// Register command
 						this.commands.set(command.name.toLowerCase(), command);
@@ -68,14 +58,14 @@ export class CommandManager {
 		}
 	}
 
-	private isCommand(obj: any): obj is new (commandManager?: CommandManager) => Command {
-		if (!obj) return false;
+	private isCommand(obj: unknown): obj is new (commandManager?: CommandManager) => Command {
+		if (typeof obj !== 'function' || !obj) return false;
 
-		const proto = obj.prototype;
+		const constructor = obj as { prototype?: Record<string, unknown> };
+		const proto = constructor.prototype;
 		if (!proto) return false;
 
-		const hasExecute = 'execute' in proto;
-		return hasExecute;
+		return 'execute' in proto;
 	}
 
 	public getCommand(name: string): Command | null {

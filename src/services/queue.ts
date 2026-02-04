@@ -1,13 +1,10 @@
 import { VideoQueue, QueueItem, MediaSource } from "../types/index.js";
-import { MediaService } from "./media.js";
 import logger from '../utils/logger.js';
 
 export class QueueService {
-	private mediaService: MediaService;
 	private queue: VideoQueue;
 
 	constructor() {
-		this.mediaService = new MediaService();
 		this.queue = {
 			items: [],
 			currentIndex: -1,
