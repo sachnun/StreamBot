@@ -289,7 +289,7 @@ export class StreamingService {
 			throw new Error('Download failed, no temp file path returned.');
 		} catch (error) {
 			logger.error(`Failed to download YouTube video: ${videoSource}`, error);
-			const errorMessage = `❌ Failed to download \`${title || 'YouTube video'}\`.`;
+			const errorMessage = `Failed to download \`${title || 'YouTube video'}\`.`;
 			if (downloadMessage) {
 				await downloadMessage.edit(errorMessage).catch(e => logger.warn("Failed to edit 'Downloading...' message:", e));
 			} else {

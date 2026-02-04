@@ -25,11 +25,8 @@ export default class PreviewCommand extends BaseCommand {
 			return;
 		}
 
-		// React with camera emoji
-		context.message.react('📸');
-
 		// Reply with message to indicate that the preview is being generated
-		context.message.reply('📸 **Generating preview thumbnails...**');
+		context.message.reply('**Generating preview thumbnails...**');
 
 		try {
 			const videoFilename = vid_name.name + path.extname(vid_name.path);
@@ -42,7 +39,7 @@ export default class PreviewCommand extends BaseCommand {
 				}
 
 				// Message content
-				const content = `📸 **Preview**: \`${vid_name.name}\``;
+				const content = `**Preview**: \`${vid_name.name}\``;
 
 				// Send message with attachments
 				await context.message.reply({

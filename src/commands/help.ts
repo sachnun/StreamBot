@@ -15,12 +15,11 @@ export default class HelpCommand extends BaseCommand {
 		const commandList = this.commandManager.getCommandList();
 
 		const helpText = [
-			'📽 **Available Commands**',
+			'**Available Commands**',
 			'',
 			commandList,
 		].join('\n');
 
-		await context.message.react('📋');
 		await context.message.reply(helpText);
 	}
 }

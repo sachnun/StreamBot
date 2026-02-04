@@ -38,7 +38,6 @@ export async function handleMessageCreate(
 	const executed = await commandManager.executeCommand(commandName, context);
 
 	if (!executed) {
-		await message.react('❌');
-		await message.reply(`❌ **Error**: Unknown command. Use \`${config.prefix}help\` to see available commands.`);
+		await message.reply(`**Error**: Unknown command. Use \`${config.prefix}help\` to see available commands.`);
 	}
 }

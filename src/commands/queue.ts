@@ -1,5 +1,6 @@
 import { BaseCommand } from "./base.js";
 import { CommandContext } from "../types/index.js";
+import config from "../config.js";
 
 export default class QueueCommand extends BaseCommand {
 	name = "queue";
@@ -16,12 +17,12 @@ export default class QueueCommand extends BaseCommand {
 			return;
 		}
 
-		let queueText = `📋 **Queue** (${queueItems.length} item${queueItems.length !== 1 ? 's' : ''})\n\n`;
+		let queueText = `**Queue** (${queueItems.length} item${queueItems.length !== 1 ? 's' : ''})\n\n`;
 
 		if (queueStatus.isPlaying && currentItem) {
-			const status = currentItem.resolved ? '▶️' : '⏳';
+			const status = currentItem.resolved ? 'Playing:' : 'Loading:';
 			const title = currentItem.resolved ? currentItem.title : `${currentItem.title} (resolving...)`;
-			queueText += `${status} **Currently Playing:**\n\`${title}\` (requested by ${currentItem.requestedBy})\n\n`;
+			queueText += `[${status}] \`${title}\` (requested by ${currentItem.requestedBy})\n\n`;
 		}
 
 		queueText += '**Up Next:**\n';
@@ -39,7 +40,7 @@ export default class QueueCommand extends BaseCommand {
 			upcomingItems.forEach((item, index) => {
 				const position = queueStatus.isPlaying ? index + 1 : index;
 				const addedTime = item.addedAt.toLocaleTimeString();
-				const status = item.resolved ? '' : '⏳';
+				const status = item.resolved ? '' : '[Loading]';
 				const title = item.resolved ? item.title : `${item.title} (pending)`;
 				queueText += `${position + 1}. ${status} \`${title}\` (by ${item.requestedBy}) - Added at ${addedTime}\n`;
 			});
@@ -50,10 +51,33 @@ export default class QueueCommand extends BaseCommand {
 			const firstPart = queueText.substring(0, 1900) + '...';
 			const secondPart = '...(continued)\n' + queueText.substring(1900);
 
-			await context.message.channel.send(firstPart);
-			await context.message.channel.send(secondPart);
+			const msg1 = await context.message.channel.send(firstPart);
+			const msg2 = await context.message.channel.send(secondPart);
+			
+			// Auto-delete if enabled
+			if (config.auto_delete_info && config.auto_delete_delay > 0) {
+				setTimeout(async () => {
+					try {
+						await msg1.delete();
+						await msg2.delete();
+					} catch (err) {
+						// Message might already be deleted
+					}
+				}, config.auto_delete_delay * 1000);
+			}
 		} else {
-			await context.message.channel.send(queueText);
+			const msg = await context.message.channel.send(queueText);
+			
+			// Auto-delete if enabled
+			if (config.auto_delete_info && config.auto_delete_delay > 0) {
+				setTimeout(async () => {
+					try {
+						await msg.delete();
+					} catch (err) {
+						// Message might already be deleted
+					}
+				}, config.auto_delete_delay * 1000);
+			}
 		}
 	}
 }
