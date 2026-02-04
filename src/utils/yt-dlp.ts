@@ -45,12 +45,6 @@ const exePath = nodePath.resolve(scriptsPath, filename);
 function args(url: string, options: Partial<YTFlags>): string[] {
 	const optArgs: string[] = [];
 	
-	// Add cookies file if configured
-	if (config.ytdlpCookiesPath && existsSync(config.ytdlpCookiesPath)) {
-		optArgs.push('--cookies');
-		optArgs.push(config.ytdlpCookiesPath);
-	}
-	
 	for (const [key, val] of Object.entries(options)) {
 		if (val === null || val === undefined) {
 			continue;
