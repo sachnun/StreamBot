@@ -1,16 +1,6 @@
-<div align="center">
-
-<img src="src/server/public/favicon.svg" alt="StreamBot" width="400"/>
-
 # StreamBot
 
-[![GitHub release](https://img.shields.io/github/v/release/ysdragon/StreamBot?style=flat-square&color=blue)](https://github.com/ysdragon/StreamBot/releases)
-
 Quick way to stream video to Discord voice channels.
-
-</div>
-
----
 
 ## Quick Start
 
@@ -89,15 +79,3 @@ Open `http://localhost:8080` to upload and manage videos from browser.
 - Node.js v21+
 - FFmpeg
 - yt-dlp
-
-## License
-
-Distributed under the MIT License. See [LICENSE](LICENSE) file for details.
-
----
-
-<div align="center">
-
-**[ Back to Top ](#streambot)**
-
-</div>
