@@ -107,17 +107,15 @@ export const DiscordUtils = {
    */
   async sendList(message: Message, items: string[], type?: string): Promise<Message> {
     let content: string;
-    if (type == "ytsearch") {
-      content = `**Search Results**:\n${items.join('\n')}`;
-    } else if (type == "refresh") {
+    if (type == "refresh") {
       content = `**Video list refreshed**:\n${items.join('\n')}`;
     } else {
       content = `**Local Videos List**:\n${items.join('\n')}`;
     }
-    
+
     return sendWithAutoDelete(
-      () => type === "ytsearch" || type === "refresh" 
-        ? message.reply(content) 
+      () => type === "refresh"
+        ? message.reply(content)
         : message.channel.send(content),
       config.auto_delete_info,
       config.auto_delete_delay * 1000
