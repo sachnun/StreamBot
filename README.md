@@ -9,6 +9,36 @@ npm install
 npm run build && npm start
 ```
 
+## Running with PM2
+
+```bash
+# Install PM2 globally (if not already installed)
+npm install -g pm2
+
+# Start the bot with PM2
+npm run build
+pm2 start npm --name "streambot" -- start
+
+# View status
+pm2 status
+
+# View logs
+pm2 logs streambot
+
+# Stop the bot
+pm2 stop streambot
+
+# Restart the bot
+pm2 restart streambot
+
+# Delete from PM2
+pm2 delete streambot
+
+# Save PM2 process list (auto-start on server reboot)
+pm2 save
+pm2 startup
+```
+
 ## How to Use
 
 ### 1. Setup
