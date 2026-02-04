@@ -1,5 +1,4 @@
 import winston from 'winston';
-import config from '../config.js';
 
 // Custom log format
 const logFormat = winston.format.combine(
@@ -12,7 +11,7 @@ const logFormat = winston.format.combine(
 
 // Create logger instance
 const logger = winston.createLogger({
-	level: config.logLevel,
+	level: 'info',
 	format: logFormat,
 	transports: [
 		// Console output
