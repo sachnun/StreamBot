@@ -30,7 +30,6 @@ StreamBot is a sophisticated Discord self-bot designed for streaming video conte
 - [Obtaining Discord Token](#obtaining-discord-token)
 - [Configuration](#configuration)
 - [Usage](#usage)
-- [Docker Deployment](#docker-deployment)
 - [Commands](#commands)
 - [Web Interface](#web-interface)
 - [Contributing](#contributing)
@@ -61,7 +60,6 @@ StreamBot is a sophisticated Discord self-bot designed for streaming video conte
 - **Hardware Acceleration**: GPU encoding support for improved performance
 - **Multiple Codecs**: H.264, H.265, VP8, VP9, AV1 support
 - **Cookie Authentication**: Access private and premium content
-- **Docker Support**: Containerized deployment with Cloudflare WARP option
 
 ---
 
@@ -71,8 +69,7 @@ StreamBot is a sophisticated Discord self-bot designed for streaming video conte
 
 | Dependency | Version | Purpose |
 |------------|---------|---------|
-| [Bun](https://bun.sh/) | v1.1.39+ | Recommended runtime |
-| [Node.js](https://nodejs.org/) | v21+ | Alternative runtime |
+| [Node.js](https://nodejs.org/) | v21+ | JavaScript runtime |
 | [FFmpeg](https://www.ffmpeg.org/) | Latest | Video encoding |
 | [yt-dlp](https://github.com/yt-dlp/yt-dlp) | Latest | Content extraction |
 
@@ -93,9 +90,7 @@ StreamBot is a sophisticated Discord self-bot designed for streaming video conte
 git clone https://github.com/ysdragon/StreamBot
 cd StreamBot
 
-# Install dependencies (Bun recommended)
-bun install
-# OR with npm
+# Install dependencies
 npm install
 ```
 
@@ -220,22 +215,21 @@ SERVER_PASSWORD="secure_password"  # Supports bcrypt/argon2 hashes
 ### Starting the Bot
 
 ```bash
-# With Bun (Recommended)
-bun run start
-
-# With Node.js
+# Build first
 npm run build
-npm run start:node
+
+# Start the bot
+npm start
 ```
 
 ### Running Web Interface Only
 
 ```bash
-# Bun
-bun run server
+# Build first
+npm run build
 
-# Node.js
-npm run server:node
+# Start web interface only
+npm run server
 ```
 
 ### Video Playback Workflow
@@ -248,34 +242,6 @@ The bot supports multiple content sources through a unified interface:
 4. **Other sources**: Any URL supported by yt-dlp
 
 Videos are managed through an intelligent queue system with auto-advance.
-
----
-
-## Docker Deployment
-
-### Standard Container
-
-```bash
-# Setup
-mkdir streambot && cd streambot
-wget https://raw.githubusercontent.com/ysdragon/StreamBot/main/docker-compose.yml
-
-# Configure docker-compose.yml with your settings
-# Launch
-docker compose up -d
-```
-
-### Cloudflare WARP Deployment
-
-```bash
-# Download WARP configuration
-wget https://raw.githubusercontent.com/ysdragon/StreamBot/main/docker-compose-warp.yml
-
-# Add WARP license key and configure environment
-docker compose -f docker-compose-warp.yml up -d
-```
-
-> **Note**: Web interface is unavailable in WARP mode due to network isolation.
 
 ---
 
