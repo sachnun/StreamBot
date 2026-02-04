@@ -27,6 +27,7 @@ StreamBot is a sophisticated Discord self-bot designed for streaming video conte
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
+- [Obtaining Discord Token](#obtaining-discord-token)
 - [Configuration](#configuration)
 - [Usage](#usage)
 - [Docker Deployment](#docker-deployment)
@@ -107,9 +108,49 @@ npm install
 
 2. Edit `.env` with your settings (see [Configuration](#configuration))
 
-3. Obtain your Discord token following the [wiki guide](https://github.com/ysdragon/StreamBot/wiki/Get-Discord-user-token)
+3. Obtain your Discord token (see [Obtaining Discord Token](#obtaining-discord-token))
 
 **Note**: Required directories are created automatically on first execution.
+
+### Obtaining Discord Token
+
+To use this self-bot, you will need to extract your Discord user token. Follow these steps carefully:
+
+1. **Create a dedicated Discord account** for the bot (recommended to avoid risking your primary account)
+
+2. **Log in to Discord** via your web browser at [discord.com](https://discord.com)
+
+3. **Open Developer Tools** by pressing `Ctrl + Shift + I` (Windows/Linux) or `Cmd + Option + I` (macOS)
+
+4. **Navigate to the Console tab** and paste the following code:
+
+   ```javascript
+   window.webpackChunkdiscord_app.push([
+       [Symbol()],
+       {},
+       req => {
+           if (!req.c) return;
+           for (let m of Object.values(req.c)) {
+               try {
+                   if (!m.exports || m.exports === window) continue;
+                   if (m.exports?.getToken) return copy(m.exports.getToken());
+                   for (let ex in m.exports) {
+                       if (m.exports?.[ex]?.getToken && m.exports[ex][Symbol.toStringTag] !== 'IntlMessagesProxy') return copy(m.exports[ex].getToken());
+                   }
+               } catch {}
+           }
+       },
+   ]);
+
+   window.webpackChunkdiscord_app.pop();
+   console.log('%cWorked!', 'font-size: 50px');
+   ```
+
+5. **Press Enter** to execute the code. If successful, you will see "Worked!" displayed in the console
+
+6. **Your token is now copied to your clipboard**. Paste it into the `TOKEN` field in your `.env` file
+
+> **Security Notice**: Your Discord token provides full access to your account. Never share it publicly or commit it to version control. Treat it with the same confidentiality as a password.
 
 ---
 
