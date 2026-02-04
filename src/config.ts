@@ -46,6 +46,21 @@ export function parseBoolean(value: string | undefined): boolean {
 	}
 }
 
+export function parseLogLevel(value: string | undefined): "error" | "warn" | "info" | "debug" {
+	if (typeof value === "string") {
+		value = value.trim().toLowerCase();
+	}
+	switch (value) {
+		case "error":
+		case "warn":
+		case "info":
+		case "debug":
+			return value;
+		default:
+			return "warn";
+	}
+}
+
 function parseAdminIds(value: string): string[] {
 	try {
 		// Try to parse as JSON array first
@@ -75,6 +90,7 @@ export default {
 	// General options
 	videosDir: process.env.VIDEOS_DIR ? process.env.VIDEOS_DIR : './videos',
 	previewCacheDir: process.env.PREVIEW_CACHE_DIR ? process.env.PREVIEW_CACHE_DIR : './tmp/preview-cache',
+	logLevel: process.env.LOG_LEVEL ? parseLogLevel(process.env.LOG_LEVEL) : 'warn',
 
 	// yt-dlp options
 	ytdlpCookiesPath: process.env.YTDLP_COOKIES_PATH ? process.env.YTDLP_COOKIES_PATH : '',
