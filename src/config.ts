@@ -74,10 +74,6 @@ export default {
 
 	// General options
 	videosDir: process.env.VIDEOS_DIR ? process.env.VIDEOS_DIR : './videos',
-	previewCacheDir: process.env.PREVIEW_CACHE_DIR ? process.env.PREVIEW_CACHE_DIR : './tmp/preview-cache',
-
-	// yt-dlp options
-	ytdlpCookiesPath: process.env.YTDLP_COOKIES_PATH ? process.env.YTDLP_COOKIES_PATH : '',
 
 	// Stream options
 	respect_video_params: process.env.STREAM_RESPECT_VIDEO_PARAMS ? parseBoolean(process.env.STREAM_RESPECT_VIDEO_PARAMS) : false,
@@ -89,12 +85,6 @@ export default {
 	hardwareAcceleratedDecoding: process.env.STREAM_HARDWARE_ACCELERATION ? parseBoolean(process.env.STREAM_HARDWARE_ACCELERATION) : false,
 	h26xPreset: process.env.STREAM_H26X_PRESET ? parsePreset(process.env.STREAM_H26X_PRESET) : 'ultrafast',
 	videoCodec: process.env.STREAM_VIDEO_CODEC ? parseVideoCodec(process.env.STREAM_VIDEO_CODEC) : 'H264',
-
-	// Videos server options
-	server_enabled: process.env.SERVER_ENABLED ? parseBoolean(process.env.SERVER_ENABLED) : false,
-	server_username: process.env.SERVER_USERNAME ? process.env.SERVER_USERNAME : 'admin',
-	server_password: process.env.SERVER_PASSWORD ? process.env.SERVER_PASSWORD : 'admin',
-	server_port: parseInt(process.env.SERVER_PORT ? process.env.SERVER_PORT : '8080'),
 
 	// Message options
 	auto_delete_delay: 15,

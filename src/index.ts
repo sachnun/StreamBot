@@ -54,15 +54,7 @@ if (!fs.existsSync(config.videosDir)) {
 	fs.mkdirSync(config.videosDir);
 }
 
-// Create previewCache parent dir if it doesn't exist
-if (!fs.existsSync(path.dirname(config.previewCacheDir))) {
-	fs.mkdirSync(path.dirname(config.previewCacheDir), { recursive: true });
-}
 
-// Create the previewCache dir if it doesn't exist
-if (!fs.existsSync(config.previewCacheDir)) {
-	fs.mkdirSync(config.previewCacheDir);
-}
 
 // Get all video files
 const videoFiles = fs.readdirSync(config.videosDir);
@@ -99,11 +91,6 @@ process.on('uncaughtException', (error) => {
 	}
 });
 
-// Run server if enabled in config
-if (config.server_enabled) {
-	// Run server.ts
-	import('./server/index.js');
-}
 
 // Login to Discord
 client.login(config.token);
