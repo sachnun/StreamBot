@@ -274,16 +274,18 @@ export interface CommandContext {
 }
 
 export interface StreamStatus {
- 	joined: boolean;
- 	joinsucc: boolean;
- 	playing: boolean;
- 	manualStop: boolean;
- 	channelInfo: {
- 		guildId: string;
- 		channelId: string;
- 		cmdChannelId: string;
- 	};
- 	queue: VideoQueue;
+	joined: boolean;
+	joinsucc: boolean;
+	playing: boolean;
+	manualStop: boolean;
+	channelInfo: {
+		guildId: string;
+		channelId: string;
+		cmdChannelId: string;
+	};
+	queue: VideoQueue;
+	currentProgress?: VideoProgress;
+	progressMessageId?: string;
 }
 
 export interface Video {
@@ -300,26 +302,35 @@ export interface Command {
 }
 
 export interface MediaSource {
- 	url: string;
- 	title: string;
- 	type: 'youtube' | 'twitch' | 'local' | 'url';
- 	isLive?: boolean;
+  	url: string;
+  	title: string;
+  	type: 'youtube' | 'twitch' | 'local' | 'url';
+  	isLive?: boolean;
 }
 
 export interface QueueItem {
-  	id: string;
-  	url: string;
-  	title: string;
-  	type: MediaSource['type'];
-  	isLive?: boolean;
-  	requestedBy: string;
-  	addedAt: Date;
-  	originalInput?: string;
-  	resolved?: boolean;
+   	id: string;
+   	url: string;
+   	title: string;
+   	type: MediaSource['type'];
+   	isLive?: boolean;
+   	requestedBy: string;
+   	addedAt: Date;
+   	originalInput?: string;
+   	resolved?: boolean;
 }
 
 export interface VideoQueue {
   items: QueueItem[];
   currentIndex: number;
   isPlaying: boolean;
+}
+
+export interface VideoProgress {
+	currentTime: number;
+	duration: number;
+	progressPercent: number;
+	isLive: boolean;
+	lastUpdated: number;
+	videoTitle?: string;
 }

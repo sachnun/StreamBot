@@ -6,24 +6,29 @@ import { MediaService } from './media.js';
 import { QueueService } from './queue.js';
 import { getVideoParams } from "../utils/ffmpeg.js";
 import logger from '../utils/logger.js';
-import { DiscordUtils, ErrorUtils } from '../utils/shared.js';
+import { DiscordUtils, ErrorUtils, TimeUtils } from '../utils/shared.js';
 import { QueueItem, StreamStatus } from '../types/index.js';
+import { ProgressManager } from './progress.js';
+import { FFmpegProgressParser } from '../utils/ffmpeg-progress.js';
+import ffmpeg from 'fluent-ffmpeg';
 
 export class StreamingService {
- 	private streamer: Streamer;
- 	private mediaService: MediaService;
- 	private queueService: QueueService;
- 	private controller: AbortController | null = null;
- 	private streamStatus: StreamStatus;
- 	private failedVideos: Set<string> = new Set();
- 	private isSkipping: boolean = false;
+  	private streamer: Streamer;
+  	private mediaService: MediaService;
+  	private queueService: QueueService;
+  	private controller: AbortController | null = null;
+  	private streamStatus: StreamStatus;
+  	private failedVideos: Set<string> = new Set();
+  	private isSkipping: boolean = false;
+  	private progressManager: ProgressManager;
 
- 	constructor(client: Client, streamStatus: StreamStatus) {
- 		this.streamer = new Streamer(client);
- 		this.mediaService = new MediaService();
- 		this.queueService = new QueueService();
- 		this.streamStatus = streamStatus;
- 	}
+  	constructor(client: Client, streamStatus: StreamStatus) {
+  		this.streamer = new Streamer(client);
+  		this.mediaService = new MediaService();
+  		this.queueService = new QueueService();
+  		this.streamStatus = streamStatus;
+  		this.progressManager = new ProgressManager(streamStatus);
+  	}
 
 	public getStreamer(): Streamer {
 		return this.streamer;
@@ -106,8 +111,9 @@ export class StreamingService {
 		this.isSkipping = true;
 
 		try {
-			// Stop the current stream immediately
+			// Stop the current stream and progress tracking
 			this.streamStatus.manualStop = true;
+			this.progressManager.stopTracking();
 			this.controller?.abort();
 			this.streamer.stopStream();
 
@@ -149,7 +155,7 @@ export class StreamingService {
 		logger.info(`Playing from queue: ${queueItem.title} (${queueItem.url})`);
 
 		// Use streaming service to play the video with video parameters
-		await this.playVideo(message, queueItem.url, queueItem.title, videoParams);
+		await this.playVideo(message, queueItem.url, queueItem.title, videoParams, queueItem.isLive);
 	}
 
 	private async getVideoParameters(videoUrl: string): Promise<{ width: number, height: number, fps?: number, bitrate?: string } | undefined> {
@@ -165,6 +171,19 @@ export class StreamingService {
 			await ErrorUtils.handleError(error, 'determining video parameters');
 			return undefined;
 		}
+	}
+
+	private async getVideoDuration(videoUrl: string): Promise<number> {
+		return new Promise((resolve) => {
+			ffmpeg.ffprobe(videoUrl, (err, metadata) => {
+				if (err || !metadata.format?.duration) {
+					logger.warn(`Could not get duration for ${videoUrl}, assuming live stream`);
+					resolve(0);
+					return;
+				}
+				resolve(Math.floor(metadata.format.duration));
+			});
+		});
 	}
 
 	private async ensureVoiceConnection(guildId: string, channelId: string, title?: string): Promise<void> {
@@ -203,8 +222,41 @@ export class StreamingService {
 		};
 	}
 
-	private async executeStream(inputForFfmpeg: any, streamOpts: any, message: Message, title: string, videoSource: string): Promise<void> {
+	private async executeStream(inputForFfmpeg: any, streamOpts: any, message: Message, title: string, videoSource: string, isLive: boolean = false): Promise<void> {
+		// Get video duration for progress tracking
+		let duration = 0;
+		try {
+			duration = await this.getVideoDuration(inputForFfmpeg);
+		} catch (error) {
+			logger.warn(`Could not determine video duration for ${title}, treating as live stream`);
+		}
+
+		const actualIsLive = isLive || duration === 0;
+
+		// Start progress tracking
+		this.progressManager.startTracking(title, duration, actualIsLive, message);
+
+		// Create progress parser
+		const progressParser = new FFmpegProgressParser(duration, actualIsLive, title);
+		progressParser.setOnProgress((progress) => {
+			this.progressManager.updateProgress(progress);
+			// Update Discord activity with progress
+			const activity = this.progressManager.getActivityOptions();
+			this.streamer.client.user?.setActivity(activity);
+		});
+
 		const { command, output: ffmpegOutput } = prepareStream(inputForFfmpeg, streamOpts, this.controller!.signal);
+
+		// Hook into stderr for progress tracking
+		command.on("stderr", (line: string) => {
+			const data = progressParser.parseLine(line);
+			if (data) {
+				const progress = progressParser.processProgress(data);
+				if (progress && this.onProgressCallback) {
+					this.onProgressCallback(progress);
+				}
+			}
+		});
 
 		command.on("error", (err, stdout, stderr) => {
 			// Don't log error if it's due to manual stop
@@ -218,6 +270,8 @@ export class StreamingService {
 				}
 				this.controller.abort();
 			}
+			progressParser.cleanup();
+			this.progressManager.stopTracking();
 		});
 
 		await playStream(ffmpegOutput, this.streamer, undefined, this.controller!.signal)
@@ -230,6 +284,10 @@ export class StreamingService {
 					);
 				}
 				if (this.controller && !this.controller.signal.aborted) this.controller.abort();
+			})
+			.finally(() => {
+				progressParser.cleanup();
+				this.progressManager.stopTracking();
 			});
 
 		// Only log as finished if we didn't have an error and weren't manually stopped
@@ -241,6 +299,8 @@ export class StreamingService {
 			logger.info(`Failed playing: ${title || videoSource}`);
 		}
 	}
+
+	private onProgressCallback?: (progress: any) => void;
 
 	private async handleQueueAdvancement(message: Message): Promise<void> {
 		await DiscordUtils.sendFinishMessage(message);
@@ -299,24 +359,25 @@ export class StreamingService {
 		}
 	}
 
-	private async prepareVideoSource(message: Message, videoSource: string, title?: string): Promise<{ inputForFfmpeg: any, tempFilePath: string | null }> {
+	private async prepareVideoSource(message: Message, videoSource: string, title?: string): Promise<{ inputForFfmpeg: any, tempFilePath: string | null, isLive: boolean }> {
 		const mediaSource = await this.mediaService.resolveMediaSource(videoSource);
 
 		if (mediaSource && mediaSource.type === 'youtube' && !mediaSource.isLive) {
 			const tempFilePath = await this.handleDownload(message, videoSource, title);
 			if (tempFilePath) {
-				return { inputForFfmpeg: tempFilePath, tempFilePath };
+				return { inputForFfmpeg: tempFilePath, tempFilePath, isLive: false };
 			}
 			// Download failed, throw to stop playback
 			throw new Error('Failed to prepare video source due to download failure.');
 		}
 
-		return { inputForFfmpeg: mediaSource ? mediaSource.url : videoSource, tempFilePath: null };
+		const isLive = mediaSource?.isLive || false;
+		return { inputForFfmpeg: mediaSource ? mediaSource.url : videoSource, tempFilePath: null, isLive };
 	}
 
-	private async executeStreamWorkflow(input: any, options: any, message: Message, title: string, source: string): Promise<void> {
+	private async executeStreamWorkflow(input: any, options: any, message: Message, title: string, source: string, isLive: boolean = false): Promise<void> {
 		this.controller = new AbortController();
-		await this.executeStream(input, options, message, title, source);
+		await this.executeStream(input, options, message, title, source, isLive);
 	}
 
 	private async finalizeStream(message: Message, tempFile: string | null): Promise<void> {
@@ -337,7 +398,13 @@ export class StreamingService {
 		}
 	}
 
-	public async playVideo(message: Message, videoSource: string, title?: string, videoParams?: { width: number, height: number, fps?: number, bitrate?: string }): Promise<void> {
+	public async playVideo(
+		message: Message, 
+		videoSource: string, 
+		title?: string, 
+		videoParams?: { width: number, height: number, fps?: number, bitrate?: string },
+		isLive?: boolean
+	): Promise<void> {
 		const [guildId, channelId] = [config.guildId, config.videoChannelId];
 		this.streamStatus.manualStop = false;
 
@@ -350,14 +417,17 @@ export class StreamingService {
 
 		let tempFile: string | null = null;
 		try {
-			const { inputForFfmpeg, tempFilePath } = await this.prepareVideoSource(message, videoSource, title);
+			const { inputForFfmpeg, tempFilePath, isLive: sourceIsLive } = await this.prepareVideoSource(message, videoSource, title);
 			tempFile = tempFilePath;
+
+			// Determine if this is a live stream
+			const actualIsLive = isLive || sourceIsLive || false;
 
 			await this.ensureVoiceConnection(guildId, channelId, title);
 			await DiscordUtils.sendPlaying(message, title || videoSource);
 
 			const streamOpts = this.setupStreamConfiguration(videoParams);
-			await this.executeStreamWorkflow(inputForFfmpeg, streamOpts, message, title || videoSource, videoSource);
+			await this.executeStreamWorkflow(inputForFfmpeg, streamOpts, message, title || videoSource, videoSource, actualIsLive);
 		} catch (error) {
 			await ErrorUtils.handleError(error, `playing video: ${title || videoSource}`);
 			if (this.controller && !this.controller.signal.aborted) this.controller.abort();
@@ -369,6 +439,9 @@ export class StreamingService {
 
 	public async cleanupStreamStatus(): Promise<void> {
 		try {
+			// Stop progress tracking first
+			this.progressManager.stopTracking();
+			
 			this.controller?.abort();
 			this.streamer.stopStream();
 
@@ -391,6 +464,10 @@ export class StreamingService {
 				channelId: "",
 				cmdChannelId: "",
 			};
+			
+			// Reset progress tracking state
+			this.streamStatus.currentProgress = undefined;
+			this.streamStatus.progressMessageId = undefined;
 		} catch (error) {
 			await ErrorUtils.handleError(error, "cleanup stream status");
 		}

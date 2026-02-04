@@ -188,3 +188,52 @@ export const GeneralUtils = {
     }
   }
 };
+
+/**
+ * Time formatting utilities for progress display
+ */
+export const TimeUtils = {
+  /**
+   * Format seconds to HH:MM:SS or MM:SS
+   */
+  formatDuration(seconds: number): string {
+    if (seconds < 0 || !isFinite(seconds)) {
+      return '00:00';
+    }
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  },
+
+  /**
+   * Format duration range [current/total]
+   */
+  formatDurationRange(current: number, total: number): string {
+    return `${this.formatDuration(current)}/${this.formatDuration(total)}`;
+  },
+
+  /**
+   * Create progress bar string (10 blocks)
+   */
+  createProgressBar(percent: number, length: number = 10): string {
+    const clampedPercent = Math.max(0, Math.min(100, percent));
+    const filled = Math.floor((clampedPercent / 100) * length);
+    const empty = length - filled;
+    return '█'.repeat(filled) + '░'.repeat(empty);
+  },
+
+  /**
+   * Create progress bar with percentage
+   */
+  createProgressDisplay(percent: number, current: number, total: number): string {
+    const bar = this.createProgressBar(percent);
+    const timeRange = this.formatDurationRange(current, total);
+    return `${bar} ${percent}% [${timeRange}]`;
+  }
+};
