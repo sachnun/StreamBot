@@ -237,7 +237,7 @@ npm run server
 The bot supports multiple content sources through a unified interface:
 
 1. **Local files**: Reference by filename from `VIDEOS_DIR`
-2. **YouTube**: Provide URL or use search: `$ytsearch <query>` then `$play <number>`
+2. **YouTube**: Provide URL or search query: `$play <query>`
 3. **Twitch**: Provide stream or VOD URL
 4. **Other sources**: Any URL supported by yt-dlp
 
@@ -247,26 +247,16 @@ Videos are managed through an intelligent queue system with auto-advance.
 
 ## Commands
 
-### Playback Control
+### Commands
 
 | Command | Syntax | Description |
 |---------|--------|-------------|
 | `play` | `play <name\|url\|query>` | Play local, URL, or search YouTube |
-| `ytsearch` | `ytsearch <query>` | Search YouTube videos |
 | `stop` | `stop` | Stop playback and clear queue (aliases: `leave`, `s`) |
 | `skip` | `skip` | Advance to next video (alias: `next`) |
 | `queue` | `queue` | Display current queue |
 | `list` | `list` | Browse local video library |
-
-### System Commands
-
-| Command | Syntax | Description |
-|---------|--------|-------------|
-| `status` | `status` | Display streaming status |
-| `preview` | `preview <video>` | Generate thumbnail previews |
-| `ping` | `ping` | Check bot latency |
-| `help` | `help` | Show command reference |
-| `config` | `config [param] [value]` | View/modify settings (aliases: `cfg`, `set`) |
+| `help` | `help` | Show available commands |
 
 ---
 
